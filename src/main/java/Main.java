@@ -29,6 +29,20 @@ public class Main {
        boolean isRequestTargetExist = splittedRequest[1].length() != 1;
        if(isRequestTargetExist){
          String responseMessage = "HTTP/1.1 404 Not Found\r\n\r\n";
+//         Write logic for echo
+//         Inside if that means request target does exist
+         String[] splittedRequestTarget = splittedRequest[1].split("/");
+         if(splittedRequestTarget[1].equals("echo")){
+           //         And the last index will always be the message to respond with
+           int n = splittedRequestTarget.length;
+           int contentLength = splittedRequestTarget[n-1].length();
+           String contentType = "text/plain";
+           String content = splittedRequestTarget[n-1];
+//         Now we got contentLength, contentType, and content
+           responseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + contentType + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
+           writer.write(responseMessage.getBytes());
+         }
+
          writer.write(responseMessage.getBytes());
        }else{
          String responseMessage = "HTTP/1.1 200 OK\r\n\r\n";
