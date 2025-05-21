@@ -1,4 +1,7 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -11,13 +14,17 @@ public class Main {
     //
      try {
        ServerSocket serverSocket = new ServerSocket(4221);
-
-       // Since the tester restarts your program quite often, setting SO_REUSEADDR
-       // ensures that we don't run into 'Address already in use' errors
        serverSocket.setReuseAddress(true);
-
-       serverSocket.accept(); // Wait for connection from client.
-       System.out.println("accepted new connection");
+//       Wait for connection from client.
+       Socket connectionFromClient = serverSocket.accept();
+       BufferedReader reader = new BufferedReader(new InputStreamReader(connectionFromClient.getInputStream()));
+       String request = reader.readLine();
+       System.out.println("Message from client: " + request);
+       OutputStream writer = connectionFromClient.getOutputStream();
+       String responseMessage = "HTTP/1.1 200 OK\r\n\r\n";
+       writer.write(responseMessage.getBytes());
+       System.out.println("Message sent to client: "+ responseMessage);
+//       serverSocket.close();
      } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
      }
