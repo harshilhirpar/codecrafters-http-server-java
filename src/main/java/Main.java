@@ -43,6 +43,22 @@ public class Main {
     return formatResponseString(content, "200 OK");
   }
 
+  public static File findFile(File dir, String fileName){
+    File[] files = dir.listFiles();
+    if (files == null) return null;
+
+    for (File file : files) {
+      if (file.isDirectory()) {
+        File result = findFile(file, fileName); // recursive search
+        if (result != null) return result;
+      } else if (fileName.equals(file.getName())) {
+        return file; // file matched
+      }
+    }
+
+    return null; // not found
+  }
+
   private static class ClientHandler implements  Runnable{
 
     private final Socket clientSocket;
@@ -102,6 +118,12 @@ public class Main {
 
             String fileName = splittedRequestTarget[n-1];
             System.out.println(fileName);
+
+//          Here we got file name but when testing it is not finding file so need to write a logic for finding file
+            File projectRoot = new File(System.getProperty("user.dir"));
+            File foundFile = findFile(projectRoot, fileName);
+            assert foundFile != null;
+            System.out.println("File found at: " + foundFile.getAbsolutePath());
             String filePath = FILE_PATH_INIT + fileName + ".txt";
             System.out.println(filePath);
             File file = new File(filePath);
