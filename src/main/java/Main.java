@@ -101,7 +101,12 @@ public class Main {
 
 //        TODO: GETTING REQUEST BODY
         int reqBodyReader;
-        int count = Integer.parseInt(cntLength.split(":")[1].trim());
+        int count = 0;
+        if(cntLength.isEmpty()){
+          System.out.println("Something went wrong");
+        }else{
+          count = Integer.parseInt(cntLength.split(":")[1].trim());
+        }
         StringBuilder reqBody = new StringBuilder();
         for(int i = 0; i< count; i++){
           reqBodyReader = reader.read();
