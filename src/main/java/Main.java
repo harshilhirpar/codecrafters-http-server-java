@@ -11,7 +11,7 @@ public class Main {
   public static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
   public static final String NOT_FOUND_ERROR_STRING = "HTTP/1.1 404 Not Found\r\n\r\n";
   private static final ExecutorService threadPool = Executors.newFixedThreadPool(10);
-  private static final String FILE_PATH_INIT = "tmp/data/codecrafters.io/http-server-tester/";
+  private static final String FILE_PATH_INIT = "/tmp/data/codecrafters.io/http-server-tester/";
   private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
   private static final String STATUS_200_OK = "200 OK";
 
@@ -123,13 +123,13 @@ public class Main {
 //            System.out.println();
 
 //          Here we got file name but when testing it is not finding file so need to write a logic for finding file
-            File projectRoot = new File(System.getProperty("user.dir"));
-            File[] files = projectRoot.listFiles();
-            if(files != null){
-            System.out.println(Arrays.toString(files));
-            }else {
-              System.out.println("null filessdvsdvsdv");
-            }
+//            File projectRoot = new File(System.getProperty("user.dir"));
+//            File[] files = projectRoot.listFiles();
+//            if(files != null){
+//            System.out.println(Arrays.toString(files));
+//            }else {
+//              System.out.println("null filessdvsdvsdv");
+//            }
 //            File foundFile = findFile(projectRoot, fileName);
 //            System.out.println("File found at: " + foundFile.toString());
             String filePath = FILE_PATH_INIT + fileName + ".txt";
