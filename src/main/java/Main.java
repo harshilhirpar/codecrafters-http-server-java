@@ -151,7 +151,7 @@ public class Main {
             if(request.contains("POST")){
 //            TODO: POST REQUEST LOGIC
               try{
-                File newFile = new File(fileName);
+                File newFile = new File(args[1], fileName);
                 if(newFile.createNewFile()){
                   System.out.println("File created: " + newFile.getName());
                   writeFileHandler(newFile, reqBody);
