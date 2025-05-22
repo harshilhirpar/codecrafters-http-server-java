@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -122,9 +123,9 @@ public class Main {
 
 //          Here we got file name but when testing it is not finding file so need to write a logic for finding file
             File projectRoot = new File(System.getProperty("user.dir"));
-            System.out.println(projectRoot);
-            File foundFile = findFile(projectRoot, fileName);
-//            System.out.println("File found at: " + foundFile.getAbsolutePath());
+            System.out.println(Objects.requireNonNull(projectRoot.listFiles()).toString());
+//            File foundFile = findFile(projectRoot, fileName);
+//            System.out.println("File found at: " + foundFile.toString());
             String filePath = FILE_PATH_INIT + fileName + ".txt";
             System.out.println(filePath);
             File file = new File(filePath);
