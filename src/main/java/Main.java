@@ -176,9 +176,9 @@ public class Main {
               if(args.length != 0){
                 file = new File(args[1], fileName);
               }
-              System.out.println(file != null);
               if(file != null){
                 try{
+                  System.out.println(file.isFile());
                   BufferedReader file_reader = new BufferedReader(new FileReader(file));
                   String line;
                   StringBuilder file_content = new StringBuilder();
