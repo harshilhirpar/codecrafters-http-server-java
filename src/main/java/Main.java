@@ -49,11 +49,9 @@ public class Main {
 
     for (File file : files) {
       if (file.isDirectory()) {
-        System.out.println("true");
         File result = findFile(file, fileName); // recursive search
         if (result != null) return result;
       } else if (fileName.equals(file.getName())) {
-        System.out.println("Inside else if");
         return file; // file matched
       }
     }
@@ -120,11 +118,13 @@ public class Main {
 
             String fileName = splittedRequestTarget[n-1];
             System.out.println(fileName);
+//            System.out.println();
 
 //          Here we got file name but when testing it is not finding file so need to write a logic for finding file
             File projectRoot = new File(System.getProperty("user.dir"));
+            System.out.println(projectRoot);
             File foundFile = findFile(projectRoot, fileName);
-            System.out.println("File found at: " + foundFile.getAbsolutePath());
+//            System.out.println("File found at: " + foundFile.getAbsolutePath());
             String filePath = FILE_PATH_INIT + fileName + ".txt";
             System.out.println(filePath);
             File file = new File(filePath);
