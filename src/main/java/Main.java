@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -11,9 +12,9 @@ public class Main {
   public static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
   public static final String NOT_FOUND_ERROR_STRING = "HTTP/1.1 404 Not Found\r\n\r\n";
   private static final ExecutorService threadPool = Executors.newFixedThreadPool(10);
-  private static final String FILE_PATH_INIT = "/tmp/data/codecrafters.io/http-server-tester/";
   private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
   private static final String STATUS_200_OK = "200 OK";
+  private static final String STATUS_201_CREATED = "HTTP/1.1 201 Created\r\n\r\n";
 
   public static void main(String[] args) {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -45,22 +46,6 @@ public class Main {
     return formatResponseString(content, "200 OK");
   }
 
-  public static File findFile(File dir, String fileName){
-    File[] files = dir.listFiles();
-    if (files == null) return null;
-
-    for (File file : files) {
-      if (file.isDirectory()) {
-        File result = findFile(file, fileName); // recursive search
-        if (result != null) return result;
-      } else if (fileName.equals(file.getName())) {
-        return file; // file matched
-      }
-    }
-
-    return null; // not found
-  }
-
   private static class ClientHandler implements  Runnable{
 
     private final Socket clientSocket;
@@ -78,21 +63,56 @@ public class Main {
 
 //      BufferedReader to provide efficient reading of characters, arrays, and lines.
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+//        TODO: GETTING REQUEST
         String request = reader.readLine();
+
+//        TODO: GETTING REQUEST HEADER
         String inputLine;
         String header = "";
-        while (!(inputLine = reader.readLine()).isEmpty()){
+        String cntLength = "";
+        String cntType = "";
+        while ((inputLine = reader.readLine()) != null && !inputLine.isEmpty()){
 //         Getting header
           if(inputLine.contains("User-Agent")){
             header = inputLine;
           }
+          if(inputLine.contains("Content-Length")){
+            cntLength = inputLine;
+          }
+          if(inputLine.contains("Content-Type")){
+            cntType = inputLine;
+          }
         }
 
-        System.out.println("Message from client: " + request);
+//        TODO: GETTING REQUEST BODY
+        int reqBodyReader;
+        int count = Integer.parseInt(cntLength.split(":")[1].trim());
+        StringBuilder reqBody = new StringBuilder();
+        for(int i = 0; i< count; i++){
+          reqBodyReader = reader.read();
+          if(reqBodyReader == -1){
+            System.out.println("ERROR: No request Body found, Something went wrong");
+          }
+          reqBody.append((char)reqBodyReader);
+        }
+
+//        TODO: WORK OF READER IS DONE, NEED TO  CLOSE IT
+//        reader.close();
+
+//        TODO: PRINTING NETWORK REQUEST INFORMATION
+        System.out.println("Request Information");
+        System.out.println("===================================================================");
+        System.out.println("Request: " + request);
+        System.out.println(header);
+        System.out.println(cntLength);
+        System.out.println(cntType);
+        System.out.println("Request Body: " + reqBody);
+        System.out.println("===================================================================");
+
+//        TODO: GETTING READY RESPONSE WRITER - OUTPUT STREAM
         OutputStream writer = clientSocket.getOutputStream();
-//      Read the request and split it to get Request Target
         String[] splittedRequest = request.split(" ");
-//      Then check for the requirement
         boolean isRequestTargetExist = splittedRequest[1].length() != 1;
 
         if(isRequestTargetExist){
@@ -117,26 +137,53 @@ public class Main {
             writer.write(workWithHeaders(header).getBytes());
           }
 
-//          Handle Files
+//          TODO: HANDLE FILES
           if(splittedRequestTarget[1].equals("files")){
             String fileName = splittedRequestTarget[n-1];
-            File file = new File(args[1], fileName);
-            if(file.exists()){
+            if(request.contains("POST")){
+//            TODO: POST REQUEST LOGIC
               try{
-                BufferedReader file_reader = new BufferedReader(new FileReader(file));
-                String line;
-                StringBuilder file_content = new StringBuilder();
-                while((line = file_reader.readLine()) != null){
-                  file_content.append(line);
+                File newFile = new File(args[1], fileName);
+                if(newFile.createNewFile()){
+                  System.out.println("File created: " + newFile.getName());
+                  try{
+                    FileWriter fileWriter = new FileWriter(newFile);
+                    fileWriter.write(String.valueOf(reqBody));
+                    fileWriter.close();
+                    writer.write(STATUS_201_CREATED.getBytes());
+                  }catch (IOException e){
+                    System.out.println("ERROR: working with post request file, writing file " + e.getMessage());
+                  }
+                }else{
+                  System.out.println("File Already exists");
                 }
-                String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\n" + "Content-Type: " + OCTET_STREAM_CONTENT_TYPE + "\r\nContent-Length: " + file_content.length() + "\r\n\r\n" + file_content.toString();
-                writer.write(responseMessage.getBytes());
-              }catch (IOException e){
-                System.out.println("Error file not found: " + e.getMessage());
-              }
 
-            }else {
-              writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+              }catch (IOException e){
+                System.out.println("ERROR: working with post request files" + e.getMessage());
+              }
+            }else{
+//            TODO: GET REQUEST LOGIC
+              File file = null;
+              if(args.length != 0){
+                file = new File(args[1], fileName);
+              }
+              if(file != null){
+                try{
+                  BufferedReader file_reader = new BufferedReader(new FileReader(file));
+                  String line;
+                  StringBuilder file_content = new StringBuilder();
+                  while((line = file_reader.readLine()) != null){
+                    file_content.append(line);
+                  }
+                  String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\n" + "Content-Type: " + OCTET_STREAM_CONTENT_TYPE + "\r\nContent-Length: " + file_content.length() + "\r\n\r\n" + file_content.toString();
+                  writer.write(responseMessage.getBytes());
+                }catch (IOException e){
+                  System.out.println("Error file not found: " + e.getMessage());
+                }
+
+              }else {
+                writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+              }
             }
           }
 
