@@ -118,6 +118,9 @@ public class Main {
 
 //        TODO: WORK OF READER IS DONE, NEED TO  CLOSE IT
 //        reader.close();
+//        TODO: NETWORK LOGS => COMPRESSION ALGORITHM
+//        TODO: GZIP COMPRESSION
+//        TODO: ENCRYPTION 
 
 //        TODO: PRINTING NETWORK REQUEST INFORMATION
         System.out.println("Request Information");
