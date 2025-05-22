@@ -132,10 +132,10 @@ public class Main {
 //            }
 //            File foundFile = findFile(projectRoot, fileName);
 //            System.out.println("File found at: " + foundFile.toString());
-            String filePath = FILE_PATH_INIT + fileName + ".txt";
+            String filePath = fileName + ".txt";
             System.out.println(filePath);
             File file = new File(filePath);
-            System.out.println(file.exists());
+            System.out.println(file.getAbsolutePath());
 
             if(file.exists()){
               try{
