@@ -146,12 +146,12 @@ public class Main {
           }
 
 //          Handle User agent, Request headers
-          if(splittedRequestTarget[1].equals("user-agent")){
+          else if(splittedRequestTarget[1].equals("user-agent")){
             writer.write(workWithHeaders(header).getBytes());
           }
 
 //          TODO: HANDLE FILES
-          if(splittedRequestTarget[1].equals("files")){
+          else if(splittedRequestTarget[1].equals("files")){
             String fileName = splittedRequestTarget[n-1];
             if(request.contains("POST")){
 //            TODO: POST REQUEST LOGIC
@@ -193,14 +193,16 @@ public class Main {
                 }catch (IOException e){
                   System.out.println("Error file not found: " + e.getMessage());
                 }
-
               }else {
                 writer.write(NOT_FOUND_ERROR_STRING.getBytes());
               }
             }
           }
 
-//          writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+          else{
+            writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+          }
+
         }else{
           String responseMessage = "HTTP/1.1 200 OK\r\n\r\n";
           writer.write(responseMessage.getBytes());
