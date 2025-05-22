@@ -29,7 +29,7 @@ public class Main {
          Socket clientSocket = serverSocket.accept();
          System.out.println("INFO: Executing thread pool in order to run concurrent requests");
          threadPool.execute(new ClientHandler(clientSocket, args));
-         serverSocket.close();
+//         serverSocket.close();
        }
      } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
@@ -203,10 +203,3 @@ public class Main {
   }
 
 }
-
-
-//WHAT WILL BE THE TYPICAL LIFECYCLE OF REQUEST WILL LOOK LIKE
-//IT HAS METHOD GET POST MAJORITY OF THE TIME
-//CONTENT TYPE - IMPORTANT
-//REQUEST BODY - SOME DATA
-//NEED TO KNOW WHAT TO DO BASED ON THE,LOGIC THAT HAS WRITTEN ON BACKEND WHICH IS MAPPING THE URL PROVIDED
