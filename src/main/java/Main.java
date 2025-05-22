@@ -178,7 +178,10 @@ public class Main {
               }
               if(file != null){
                 try{
-                  System.out.println(file.isFile());
+//                  System.out.println(file.isFile());
+                  if(!file.isFile()){
+                    writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+                  }
                   BufferedReader file_reader = new BufferedReader(new FileReader(file));
                   String line;
                   StringBuilder file_content = new StringBuilder();
