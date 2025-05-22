@@ -9,7 +9,7 @@ public class Main {
   public static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
   public static final String NOT_FOUND_ERROR_STRING = "HTTP/1.1 404 Not Found\r\n\r\n";
   private static final ExecutorService threadPool = Executors.newFixedThreadPool(10);
-  private static final String FILE_PATH_INIT = "tmp/";
+  private static final String FILE_PATH_INIT = "tmp/data/codecrafters.io/http-server-tester/";
   private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
   private static final String STATUS_200_OK = "200 OK";
 
