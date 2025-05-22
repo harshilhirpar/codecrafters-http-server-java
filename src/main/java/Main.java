@@ -20,12 +20,16 @@ public class Main {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     System.out.println("Logs from your program will appear here!");
      try {
+       System.out.println("INFO: Starting the program");
        ServerSocket serverSocket = new ServerSocket(4221);
        serverSocket.setReuseAddress(true);
 
        while(true){
+         System.out.println("INFO: Accepting clients");
          Socket clientSocket = serverSocket.accept();
+         System.out.println("INFO: Executing thread pool in order to run concurrent requests");
          threadPool.execute(new ClientHandler(clientSocket, args));
+         serverSocket.close();
        }
      } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
@@ -44,6 +48,16 @@ public class Main {
     String[] splittedHeader = header.split(":");
     String content = splittedHeader[1].trim();
     return formatResponseString(content, "200 OK");
+  }
+
+  public static void writeFileHandler(File file, StringBuilder reqBody){
+    try{
+      FileWriter fileWriter = new FileWriter(file);
+      fileWriter.write(String.valueOf(reqBody));
+      fileWriter.close();
+    }catch (IOException e){
+      System.out.println("ERROR: writing in file, post request: " + e.getMessage());
+    }
   }
 
   private static class ClientHandler implements  Runnable{
@@ -116,18 +130,12 @@ public class Main {
         boolean isRequestTargetExist = splittedRequest[1].length() != 1;
 
         if(isRequestTargetExist){
-//        Write logic for echo
-//        Inside if that means request target does exist
           String[] splittedRequestTarget = splittedRequest[1].split("/");
           int n = splittedRequestTarget.length;
 
           if(splittedRequestTarget[1].equals("echo")){
-
-//          And the last index will always be the message to respond with
             int contentLength = splittedRequestTarget[n-1].length();
             String content = splittedRequestTarget[n-1];
-
-//          Now we got contentLength, contentType, and content
             String responseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
             writer.write(responseMessage.getBytes());
           }
@@ -143,21 +151,17 @@ public class Main {
             if(request.contains("POST")){
 //            TODO: POST REQUEST LOGIC
               try{
-                File newFile = new File(args[1], fileName);
+                File newFile = new File(fileName);
                 if(newFile.createNewFile()){
                   System.out.println("File created: " + newFile.getName());
-                  try{
-                    FileWriter fileWriter = new FileWriter(newFile);
-                    fileWriter.write(String.valueOf(reqBody));
-                    fileWriter.close();
-                    writer.write(STATUS_201_CREATED.getBytes());
-                  }catch (IOException e){
-                    System.out.println("ERROR: working with post request file, writing file " + e.getMessage());
-                  }
+                  writeFileHandler(newFile, reqBody);
+                  writer.write(STATUS_201_CREATED.getBytes());
                 }else{
+//                  TODO: EDGE CASE WHAT IF FILE EXISTS, AND WE HAVE TO OVER WRITE THE FILE
                   System.out.println("File Already exists");
+                  writeFileHandler(newFile, reqBody);
+                  writer.write(STATUS_201_CREATED.getBytes());
                 }
-
               }catch (IOException e){
                 System.out.println("ERROR: working with post request files" + e.getMessage());
               }
@@ -187,7 +191,7 @@ public class Main {
             }
           }
 
-          writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+//          writer.write(NOT_FOUND_ERROR_STRING.getBytes());
         }else{
           String responseMessage = "HTTP/1.1 200 OK\r\n\r\n";
           writer.write(responseMessage.getBytes());
@@ -199,3 +203,10 @@ public class Main {
   }
 
 }
+
+
+//WHAT WILL BE THE TYPICAL LIFECYCLE OF REQUEST WILL LOOK LIKE
+//IT HAS METHOD GET POST MAJORITY OF THE TIME
+//CONTENT TYPE - IMPORTANT
+//REQUEST BODY - SOME DATA
+//NEED TO KNOW WHAT TO DO BASED ON THE,LOGIC THAT HAS WRITTEN ON BACKEND WHICH IS MAPPING THE URL PROVIDED
