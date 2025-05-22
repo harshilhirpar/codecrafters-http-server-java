@@ -24,7 +24,7 @@ public class Main {
 
        while(true){
          Socket clientSocket = serverSocket.accept();
-         threadPool.execute(new ClientHandler(clientSocket));
+         threadPool.execute(new ClientHandler(clientSocket, args));
        }
      } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
@@ -64,9 +64,11 @@ public class Main {
   private static class ClientHandler implements  Runnable{
 
     private final Socket clientSocket;
+    private String[] args;
 
-    public ClientHandler(Socket clientSocket){
+    public ClientHandler(Socket clientSocket, String[] args){
       this.clientSocket = clientSocket;
+      this.args = args;
     }
 
     @Override
@@ -117,26 +119,8 @@ public class Main {
 
 //          Handle Files
           if(splittedRequestTarget[1].equals("files")){
-
             String fileName = splittedRequestTarget[n-1];
-            System.out.println(fileName);
-//            System.out.println();
-
-//          Here we got file name but when testing it is not finding file so need to write a logic for finding file
-//            File projectRoot = new File(System.getProperty("user.dir"));
-//            File[] files = projectRoot.listFiles();
-//            if(files != null){
-//            System.out.println(Arrays.toString(files));
-//            }else {
-//              System.out.println("null filessdvsdvsdv");
-//            }
-//            File foundFile = findFile(projectRoot, fileName);
-//            System.out.println("File found at: " + foundFile.toString());
-            String filePath = fileName + ".txt";
-            System.out.println(filePath);
-            File file = new File(filePath);
-            System.out.println(file.getAbsolutePath());
-
+            File file = new File(args[1], fileName);
             if(file.exists()){
               try{
                 BufferedReader file_reader = new BufferedReader(new FileReader(file));
