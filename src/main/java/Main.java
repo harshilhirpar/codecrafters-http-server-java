@@ -146,9 +146,17 @@ public class Main {
                   int contentLength = splittedRequestTarget[n - 1].length();
                   String content = splittedRequestTarget[n - 1];
                   String responseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
-                  if(acceptEncoding.equals("Accept-Encoding: gzip")) {
-                    String encodingResponseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Encoding: gzip" + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
-                    writer.write(encodingResponseMessage.getBytes());
+                  if(acceptEncoding.contains("gzip")) {
+                      String[] first_part = acceptEncoding.split(":");
+                      String[] second_part = first_part[1].split(",");
+                      for(String encodingAlgorithm: second_part){
+                          if(encodingAlgorithm.trim().equals("gzip")){
+                            String encodingResponseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Encoding: gzip" + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
+                            writer.write(encodingResponseMessage.getBytes());
+                            break;
+                          }
+                      }
+                      writer.write(responseMessage.getBytes());
                   }else{
                     writer.write(responseMessage.getBytes());
                   }
