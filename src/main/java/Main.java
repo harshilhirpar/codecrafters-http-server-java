@@ -86,6 +86,7 @@ public class Main {
         String header = "";
         String cntLength = "";
         String cntType = "";
+        String acceptEncoding = "";
         while ((inputLine = reader.readLine()) != null && !inputLine.isEmpty()){
 //         Getting header
           if(inputLine.contains("User-Agent")){
@@ -96,6 +97,9 @@ public class Main {
           }
           if(inputLine.contains("Content-Type")){
             cntType = inputLine;
+          }
+          if(inputLine.contains("Accept-Encoding")){
+            acceptEncoding = inputLine;
           }
         }
 
@@ -116,11 +120,6 @@ public class Main {
           reqBody.append((char)reqBodyReader);
         }
 
-//        TODO: WORK OF READER IS DONE, NEED TO  CLOSE IT
-//        reader.close();
-//        TODO: NETWORK LOGS => COMPRESSION ALGORITHM
-//        TODO: GZIP COMPRESSION
-//        TODO: ENCRYPTION 
 
 //        TODO: PRINTING NETWORK REQUEST INFORMATION
         System.out.println("Request Information");
@@ -129,6 +128,7 @@ public class Main {
         System.out.println(header);
         System.out.println(cntLength);
         System.out.println(cntType);
+        System.out.println(acceptEncoding);
         System.out.println("Request Body: " + reqBody);
         System.out.println("===================================================================");
 
@@ -141,70 +141,73 @@ public class Main {
           String[] splittedRequestTarget = splittedRequest[1].split("/");
           int n = splittedRequestTarget.length;
 
-          if(splittedRequestTarget[1].equals("echo")){
-            int contentLength = splittedRequestTarget[n-1].length();
-            String content = splittedRequestTarget[n-1];
-            String responseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
-            writer.write(responseMessage.getBytes());
-          }
+            switch (splittedRequestTarget[1]) {
+                case "echo" -> {
+                  int contentLength = splittedRequestTarget[n - 1].length();
+                  String content = splittedRequestTarget[n - 1];
+                  String responseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
+                  if(acceptEncoding.equals("Accept-Encoding: gzip")) {
+                    String encodingResponseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Encoding: gzip" + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
+                    writer.write(encodingResponseMessage.getBytes());
+                  }else{
+                    writer.write(responseMessage.getBytes());
+                  }
+                }
 
 //          Handle User agent, Request headers
-          else if(splittedRequestTarget[1].equals("user-agent")){
-            writer.write(workWithHeaders(header).getBytes());
-          }
+                case "user-agent" -> writer.write(workWithHeaders(header).getBytes());
+
 
 //          TODO: HANDLE FILES
-          else if(splittedRequestTarget[1].equals("files")){
-            String fileName = splittedRequestTarget[n-1];
-            if(request.contains("POST")){
+                case "files" -> {
+                    String fileName = splittedRequestTarget[n - 1];
+                    if (request.contains("POST")) {
 //            TODO: POST REQUEST LOGIC
-              try{
-                File newFile = new File(args[1], fileName);
-                if(newFile.createNewFile()){
-                  System.out.println("File created: " + newFile.getName());
-                  writeFileHandler(newFile, reqBody);
-                  writer.write(STATUS_201_CREATED.getBytes());
-                }else{
+                        try {
+                            File newFile = new File(args[1], fileName);
+                            if (newFile.createNewFile()) {
+                                System.out.println("File created: " + newFile.getName());
+                                writeFileHandler(newFile, reqBody);
+                                writer.write(STATUS_201_CREATED.getBytes());
+                            } else {
 //                  TODO: EDGE CASE WHAT IF FILE EXISTS, AND WE HAVE TO OVER WRITE THE FILE
-                  System.out.println("File Already exists");
-                  writeFileHandler(newFile, reqBody);
-                  writer.write(STATUS_201_CREATED.getBytes());
-                }
-              }catch (IOException e){
-                System.out.println("ERROR: working with post request files" + e.getMessage());
-              }
-            }else{
+                                System.out.println("File Already exists");
+                                writeFileHandler(newFile, reqBody);
+                                writer.write(STATUS_201_CREATED.getBytes());
+                            }
+                        } catch (IOException e) {
+                            System.out.println("ERROR: working with post request files" + e.getMessage());
+                        }
+                    } else {
 //            TODO: GET REQUEST LOGIC
-              File file = null;
-              if(args.length != 0){
-                file = new File(args[1], fileName);
-              }
-              if(file != null){
-                try{
+                        File file = null;
+                        if (args.length != 0) {
+                            file = new File(args[1], fileName);
+                        }
+                        if (file != null) {
+                            try {
 //                  System.out.println(file.isFile());
-                  if(!file.isFile()){
-                    writer.write(NOT_FOUND_ERROR_STRING.getBytes());
-                  }
-                  BufferedReader file_reader = new BufferedReader(new FileReader(file));
-                  String line;
-                  StringBuilder file_content = new StringBuilder();
-                  while((line = file_reader.readLine()) != null){
-                    file_content.append(line);
-                  }
-                  String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\n" + "Content-Type: " + OCTET_STREAM_CONTENT_TYPE + "\r\nContent-Length: " + file_content.length() + "\r\n\r\n" + file_content.toString();
-                  writer.write(responseMessage.getBytes());
-                }catch (IOException e){
-                  System.out.println("Error file not found: " + e.getMessage());
+                                if (!file.isFile()) {
+                                    writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+                                }
+                                BufferedReader file_reader = new BufferedReader(new FileReader(file));
+                                String line;
+                                StringBuilder file_content = new StringBuilder();
+                                while ((line = file_reader.readLine()) != null) {
+                                    file_content.append(line);
+                                }
+                                String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\n" + "Content-Type: " + OCTET_STREAM_CONTENT_TYPE + "\r\nContent-Length: " + file_content.length() + "\r\n\r\n" + file_content.toString();
+                                writer.write(responseMessage.getBytes());
+                            } catch (IOException e) {
+                                System.out.println("Error file not found: " + e.getMessage());
+                            }
+                        } else {
+                            writer.write(NOT_FOUND_ERROR_STRING.getBytes());
+                        }
+                    }
                 }
-              }else {
-                writer.write(NOT_FOUND_ERROR_STRING.getBytes());
-              }
+                default -> writer.write(NOT_FOUND_ERROR_STRING.getBytes());
             }
-          }
-
-          else{
-            writer.write(NOT_FOUND_ERROR_STRING.getBytes());
-          }
 
         }else{
           String responseMessage = "HTTP/1.1 200 OK\r\n\r\n";
