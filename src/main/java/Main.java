@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -161,7 +162,7 @@ public class Main {
                               }
                               ByteArrayOutputStream compressedData = new ByteArrayOutputStream();
                               GZIPOutputStream gzip = new GZIPOutputStream(compressedData);
-                              gzip.write(content.getBytes());
+                              gzip.write(content.getBytes(StandardCharsets.UTF_8));
                               gzip.close();
                               int compressedDataLength = compressedData.toString().length();
                               String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressedData;
