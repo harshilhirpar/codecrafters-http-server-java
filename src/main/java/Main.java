@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 
 public class Main {
 
@@ -145,15 +146,27 @@ public class Main {
                 case "echo" -> {
                   int contentLength = splittedRequestTarget[n - 1].length();
                   String content = splittedRequestTarget[n - 1];
-                  String responseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
+                  String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
                   if(acceptEncoding.contains("gzip")) {
                       String[] first_part = acceptEncoding.split(":");
                       String[] second_part = first_part[1].split(",");
                       for(String encodingAlgorithm: second_part){
                           if(encodingAlgorithm.trim().equals("gzip")){
-                            String encodingResponseMessage = "HTTP/1.1 200 OK\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Encoding: gzip" + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
-                            writer.write(encodingResponseMessage.getBytes());
-                            break;
+//                              TODO: RECEIVED CONTENT COMPRESSED WITH GZIP
+//                              TODO: COMPRESSION ALGORITHMS ALMOST ALWAYS HAVE SOME FORM OF SPACE OVERHEAD, WHICH MEANS THAT THEY ARE ONLY EFFECTIVE WHEN COMPRESSING DATA WHICH IS SUFFICIENTLY LARGE THAT THE OVERHEAD IS SMALLER THAN THE AMOUNT OF SAVED SPACE
+//                              TODO: COMPRESSING A STRING WHICH IS ONLY 20 CHARACTERS LONG IS NOT TOO EASY, AND IT IS NOT ALWAYS POSSIBLE. IF YOU HAVE REPETITION. HUFFMAN CODING OR SIMPLE RUN-LENGTH ENCODING MIGHT BE ABLE TO COMPRESS BUT PROBABLY NOT BY VERY MUCH.
+//                              TODO: CHECK IS CONTENT LENGTH IS NOT ZERO
+                              if(contentLength == 0){
+                                  System.out.println("Something went wrong, content length is 0");
+                              }
+                              ByteArrayOutputStream compressedData = new ByteArrayOutputStream();
+                              GZIPOutputStream gzip = new GZIPOutputStream(compressedData);
+                              gzip.write(content.getBytes());
+                              gzip.close();
+                              int compressedDataLength = compressedData.toString().length();
+                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Encoding: gzip" + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressedData;
+                              writer.write(encodingResponseMessage.getBytes());
+                              break;
                           }
                       }
                       writer.write(responseMessage.getBytes());
@@ -194,7 +207,6 @@ public class Main {
                         }
                         if (file != null) {
                             try {
-//                  System.out.println(file.isFile());
                                 if (!file.isFile()) {
                                     writer.write(NOT_FOUND_ERROR_STRING.getBytes());
                                 }
@@ -218,7 +230,7 @@ public class Main {
             }
 
         }else{
-          String responseMessage = "HTTP/1.1 200 OK\r\n\r\n";
+          String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\n\r\n";
           writer.write(responseMessage.getBytes());
         }
       }catch (IOException e){
