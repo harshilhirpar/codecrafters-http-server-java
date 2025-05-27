@@ -167,7 +167,7 @@ public class Main {
                               byte[] compressed = compressedData.toByteArray();
                               System.out.println("===> "+compressed.length);
                               int compressedDataLength = compressedData.toString().length();
-                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressed;
+                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressed.toString().getBytes(StandardCharsets.UTF_8);
                               writer.write(encodingResponseMessage.getBytes());
                               break;
                           }
