@@ -1,4 +1,5 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.CharBuffer;
@@ -58,6 +59,10 @@ public class Main {
     String[] splittedHeader = header.split(":");
     String content = splittedHeader[1].trim();
     return formatResponseString(content, "200 OK");
+  }
+
+  static String hexToBin(String s) {
+        return new BigInteger(s, 16).toString(2);
   }
 
   public static void writeFileHandler(File file, StringBuilder reqBody){
@@ -177,10 +182,10 @@ public class Main {
                               for (int i=0; i< compressed.length; i++){
                                   hexString.append(byteToHex(compressed[i]));
                               }
-                              System.out.println(hexString.toString());
+                              System.out.println(hexToBin(hexString.toString()));
 //                              String hexEncodedData = HexFormat.of().formatHex(compressed);
                               int compressedDataLength = compressedData.toString().length();
-                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + hexString;
+                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + hexToBin(hexString.toString());
                               writer.write(encodingResponseMessage.getBytes());
                               break;
                           }
