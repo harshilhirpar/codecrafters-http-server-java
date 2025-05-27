@@ -164,30 +164,51 @@ public class Main {
                   if(acceptEncoding.contains("gzip")) {
                       String[] first_part = acceptEncoding.split(":");
                       String[] second_part = first_part[1].split(",");
+                      boolean isGzipEncoding = false;
                       for(String encodingAlgorithm: second_part){
                           if(encodingAlgorithm.trim().equals("gzip")){
+                              isGzipEncoding = true;
 //                              TODO: RECEIVED CONTENT COMPRESSED WITH GZIP
 //                              TODO: COMPRESSION ALGORITHMS ALMOST ALWAYS HAVE SOME FORM OF SPACE OVERHEAD, WHICH MEANS THAT THEY ARE ONLY EFFECTIVE WHEN COMPRESSING DATA WHICH IS SUFFICIENTLY LARGE THAT THE OVERHEAD IS SMALLER THAN THE AMOUNT OF SAVED SPACE
 //                              TODO: COMPRESSING A STRING WHICH IS ONLY 20 CHARACTERS LONG IS NOT TOO EASY, AND IT IS NOT ALWAYS POSSIBLE. IF YOU HAVE REPETITION. HUFFMAN CODING OR SIMPLE RUN-LENGTH ENCODING MIGHT BE ABLE TO COMPRESS BUT PROBABLY NOT BY VERY MUCH.
 //                              TODO: CHECK IS CONTENT LENGTH IS NOT ZERO
-                              if(contentLength == 0){
-                                  System.out.println("Something went wrong, content length is 0");
-                              }
-                              ByteArrayOutputStream compressedData = new ByteArrayOutputStream();
-                              try(GZIPOutputStream gzip = new GZIPOutputStream(compressedData)){
-                                gzip.write(content.getBytes(StandardCharsets.UTF_8));
-                              }
-                              byte[] compressed = compressedData.toByteArray();
-                              compressedData.close();
-                              System.out.println(Arrays.toString(compressed));
-                              int compressedDataLength = compressedData.toString().length();
-                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + Arrays.toString(compressed);
-                              writer.write(encodingResponseMessage.getBytes());
-                              break;
+//                              if(contentLength == 0){
+//                                  System.out.println("Something went wrong, content length is 0");
+//                              }
+//                              ByteArrayOutputStream compressedData = new ByteArrayOutputStream();
+//                              try(GZIPOutputStream gzip = new GZIPOutputStream(compressedData)){
+//                                gzip.write(content.getBytes());
+//                              }
+//                              byte[] compressed = compressedData.toByteArray();
+//                              compressedData.close();
+//                              System.out.println(Arrays.toString(compressed));
+//                              int compressedDataLength = compressedData.toString().length();
+//                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressed.toString();
+//                              writer.write(encodingResponseMessage.getBytes());
+////                              break;
                           }
                       }
-                      System.out.println("Here to   ");
-//                      writer.write(responseMessage.getBytes());
+                      if(isGzipEncoding){
+                          byte[] byteContent = content.getBytes();
+                          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                          try(GZIPOutputStream out = new GZIPOutputStream(byteArrayOutputStream)){
+                              out.write(byteContent);
+                              out.flush();
+                          }
+                          byte[] encodedData = byteArrayOutputStream.toByteArray();
+                          System.out.println(encodedData.length);
+                          writer.write(("HTTP/1.1 "+ STATUS_200_OK).getBytes());
+                          writer.write(("\r\n").getBytes());
+                          writer.write(("Content-Encoding: gzip").getBytes());
+                          writer.write(("\r\n").getBytes());
+                          writer.write(("Content-Type: text/plain").getBytes());
+                          writer.write(("\r\n").getBytes());
+                          writer.write(("Content-Length: " + encodedData.length).getBytes());
+                          writer.write(("\r\n").getBytes());
+                          writer.write(("\r\n").getBytes());
+                          writer.write(encodedData);
+
+                      }
                   }else{
                     writer.write(responseMessage.getBytes());
                   }
