@@ -186,7 +186,8 @@ public class Main {
                               break;
                           }
                       }
-                      writer.write(responseMessage.getBytes());
+                      System.out.println("Here to   ");
+//                      writer.write(responseMessage.getBytes());
                   }else{
                     writer.write(responseMessage.getBytes());
                   }
