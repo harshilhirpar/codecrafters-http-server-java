@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -165,9 +166,9 @@ public class Main {
                               gzip.write(content.getBytes(StandardCharsets.UTF_8));
                               gzip.close();
                               byte[] compressed = compressedData.toByteArray();
-                              System.out.println("===> "+compressed.length);
+                              String hexEncodedData = HexFormat.of().formatHex(compressed);
                               int compressedDataLength = compressedData.toString().length();
-                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressed.toString().getBytes(StandardCharsets.UTF_8);
+                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + hexEncodedData;
                               writer.write(encodingResponseMessage.getBytes());
                               break;
                           }
