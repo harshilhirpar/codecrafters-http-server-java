@@ -174,18 +174,14 @@ public class Main {
                                   System.out.println("Something went wrong, content length is 0");
                               }
                               ByteArrayOutputStream compressedData = new ByteArrayOutputStream();
-                              GZIPOutputStream gzip = new GZIPOutputStream(compressedData);
-                              gzip.write(content.getBytes(StandardCharsets.UTF_8));
-                              gzip.close();
-                              byte[] compressed = compressedData.toByteArray();
-                              StringBuilder hexString = new StringBuilder();
-                              for (int i=0; i< compressed.length; i++){
-                                  hexString.append(byteToHex(compressed[i]));
+                              try(GZIPOutputStream gzip = new GZIPOutputStream(compressedData)){
+                                gzip.write(content.getBytes(StandardCharsets.UTF_8));
                               }
-                              System.out.println(hexToBin(hexString.toString()));
-//                              String hexEncodedData = HexFormat.of().formatHex(compressed);
+                              byte[] compressed = compressedData.toByteArray();
+                              compressedData.close();
+                              System.out.println(compressed);
                               int compressedDataLength = compressedData.toString().length();
-                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + hexToBin(hexString.toString());
+                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + compressed;
                               writer.write(encodingResponseMessage.getBytes());
                               break;
                           }
