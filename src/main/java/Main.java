@@ -47,6 +47,13 @@ public class Main {
     return "HTTP/1.1 " + status + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + content.trim().length() + "\r\n\r\n" + content.trim();
   }
 
+  public static String byteToHex(byte num) {
+        char[] hexDigits = new char[2];
+        hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
+        hexDigits[1] = Character.forDigit((num & 0xF), 16);
+        return new String(hexDigits);
+  }
+
   public static String workWithHeaders(String header){
     String[] splittedHeader = header.split(":");
     String content = splittedHeader[1].trim();
@@ -166,9 +173,14 @@ public class Main {
                               gzip.write(content.getBytes(StandardCharsets.UTF_8));
                               gzip.close();
                               byte[] compressed = compressedData.toByteArray();
-                              String hexEncodedData = HexFormat.of().formatHex(compressed);
+                              StringBuilder hexString = new StringBuilder();
+                              for (int i=0; i< compressed.length; i++){
+                                  hexString.append(byteToHex(compressed[i]));
+                              }
+                              System.out.println(hexString.toString());
+//                              String hexEncodedData = HexFormat.of().formatHex(compressed);
                               int compressedDataLength = compressedData.toString().length();
-                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + hexEncodedData;
+                              String encodingResponseMessage = "HTTP/1.1 "+ STATUS_200_OK + "\r\nContent-Encoding: gzip"+  "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + compressedDataLength + "\r\n\r\n" + hexString;
                               writer.write(encodingResponseMessage.getBytes());
                               break;
                           }
