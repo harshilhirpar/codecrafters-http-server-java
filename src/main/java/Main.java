@@ -13,12 +13,17 @@ import java.util.zip.GZIPOutputStream;
 
 public class Main {
 
-  public static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
-  public static final String NOT_FOUND_ERROR_STRING = "HTTP/1.1 404 Not Found\r\n\r\n";
-  private static final ExecutorService threadPool = Executors.newFixedThreadPool(10);
+  private static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
+  private static final String NOT_FOUND_ERROR_STRING = "HTTP/1.1 404 Not Found\r\n\r\n";
   private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
   private static final String STATUS_200_OK = "200 OK";
+  private static final String HTTP_1_1 = "HTTP/1.1";
   private static final String STATUS_201_CREATED = "HTTP/1.1 201 Created\r\n\r\n";
+  private static final String USER_AGENT = "User-Agent";
+  private static final String CONTENT_LENGTH = "Content-Length";
+  private static final String CONTENT_TYPE = "Content-Type";
+  private static final String ACCEPT_ENCODING = "Accept-Encoding";
+  private static final String CONNECTION_CLOSE_STRING = "Connection: close";
   private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
   public static void main(String[] args) {
@@ -26,46 +31,33 @@ public class Main {
     System.out.println("Logs from your program will appear here!");
      try {
        System.out.println("INFO: Starting the program");
-       ServerSocket serverSocket = new ServerSocket(4221);
+       try(ServerSocket serverSocket = new ServerSocket(4221)){
        serverSocket.setReuseAddress(true);
-
-       while(true){
-         System.out.println("INFO: Accepting clients");
-         Socket clientSocket = serverSocket.accept();
-         clientSocket.setKeepAlive(true);
-         System.out.println("INFO: Executing thread pool in order to run concurrent requests");
+           while(true){
+               System.out.println("INFO: Accepting clients");
+               Socket clientSocket = serverSocket.accept();
+               clientSocket.setKeepAlive(true);
+               System.out.println("INFO: Executing thread pool in order to run concurrent requests");
 //         threadPool.execute(new ClientHandler(clientSocket, args));
-           executorService.execute(new ClientHandler(clientSocket, args));
+               executorService.execute(new ClientHandler(clientSocket, args));
 
+           }
        }
      } catch (IOException e) {
        System.out.println("IOException: " + e.getMessage());
-     } finally {
-//       threadPool.shutdown();
      }
   }
 
 
 //  To format a response we need content type, content length, and content
   public static String formatResponseString(String content, String status){
-    return "HTTP/1.1 " + status + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + content.trim().length() + "\r\n\r\n" + content.trim();
-  }
-
-  public static String byteToHex(byte num) {
-        char[] hexDigits = new char[2];
-        hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
-        hexDigits[1] = Character.forDigit((num & 0xF), 16);
-        return new String(hexDigits);
+    return HTTP_1_1+ " " + status + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + content.trim().length() + "\r\n\r\n" + content.trim();
   }
 
   public static String workWithHeaders(String header){
     String[] splittedHeader = header.split(":");
     String content = splittedHeader[1].trim();
-    return formatResponseString(content, "200 OK");
-  }
-
-  static String hexToBin(String s) {
-        return new BigInteger(s, 16).toString(2);
+    return formatResponseString(content, STATUS_200_OK);
   }
 
   public static void writeFileHandler(File file, StringBuilder reqBody){
@@ -81,7 +73,7 @@ public class Main {
   private static class ClientHandler implements  Runnable{
 
     private final Socket clientSocket;
-    private String[] args;
+    private final String[] args;
 
     public ClientHandler(Socket clientSocket, String[] args){
       this.clientSocket = clientSocket;
@@ -111,19 +103,25 @@ public class Main {
                 String cntLength = "";
                 String cntType = "";
                 String acceptEncoding = "";
+                String connectionClose = "";
+                boolean isConnectionClose = false;
                 while ((inputLine = reader.readLine()) != null && !inputLine.isEmpty()) {
 //         Getting header
-                    if (inputLine.contains("User-Agent")) {
+                    if (inputLine.contains(USER_AGENT)) {
                         header = inputLine;
                     }
-                    if (inputLine.contains("Content-Length")) {
+                    if (inputLine.contains(CONTENT_LENGTH)) {
                         cntLength = inputLine;
                     }
-                    if (inputLine.contains("Content-Type")) {
+                    if (inputLine.contains(CONTENT_TYPE)) {
                         cntType = inputLine;
                     }
-                    if (inputLine.contains("Accept-Encoding")) {
+                    if (inputLine.contains(ACCEPT_ENCODING)) {
                         acceptEncoding = inputLine;
+                    }
+                    if(inputLine.contains(CONNECTION_CLOSE_STRING)){
+                        connectionClose = inputLine;
+                        isConnectionClose = true;
                     }
                 }
 
@@ -149,9 +147,9 @@ public class Main {
                 System.out.println("Request Information");
                 System.out.println("===================================================================");
                 System.out.println("Request: " + request);
-                System.out.println(header);
-                System.out.println(cntLength);
-                System.out.println(cntType);
+                System.out.println("Request Headers: "+header);
+                System.out.println("Content Length: "+cntLength);
+                System.out.println("Content Type: "+cntType);
                 System.out.println(acceptEncoding);
                 System.out.println("Request Body: " + reqBody);
                 System.out.println(clientSocket.getKeepAlive());
@@ -171,6 +169,7 @@ public class Main {
                             int contentLength = splittedRequestTarget[n - 1].length();
                             String content = splittedRequestTarget[n - 1];
                             String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n\r\n" + content;
+                            String connectionCloseResponseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\nContent-Type: " + TEXT_PLAIN_CONTENT_TYPE + "\r\nContent-Length: " + contentLength + "\r\n" + CONNECTION_CLOSE_STRING+ "\r\n\r\n" + content;
                             if (acceptEncoding.contains("gzip")) {
                                 String[] first_part = acceptEncoding.split(":");
                                 String[] second_part = first_part[1].split(",");
@@ -193,19 +192,35 @@ public class Main {
                                         out.flush();
                                     }
                                     byte[] encodedData = byteArrayOutputStream.toByteArray();
-                                    writer.write(("HTTP/1.1 " + STATUS_200_OK).getBytes());
+                                    writer.write((HTTP_1_1 + " " + STATUS_200_OK).getBytes());
                                     writer.write(("\r\n").getBytes());
                                     writer.write(("Content-Encoding: gzip").getBytes());
                                     writer.write(("\r\n").getBytes());
                                     writer.write(("Content-Type: text/plain").getBytes());
                                     writer.write(("\r\n").getBytes());
                                     writer.write(("Content-Length: " + encodedData.length).getBytes());
+                                    if(isConnectionClose){
+                                        writer.write(("\r\n").getBytes());
+                                        writer.write(CONNECTION_CLOSE_STRING.getBytes());
+                                    }
                                     writer.write(("\r\n").getBytes());
                                     writer.write(("\r\n").getBytes());
                                     writer.write(encodedData);
+
+                                    if(isConnectionClose){
+                                        writer.close();
+                                        byteArrayOutputStream.flush();
+                                        clientSocket.close();
+                                    }
                                 }
                             } else {
-                                writer.write(responseMessage.getBytes());
+                                if(isConnectionClose){
+                                    writer.write(connectionCloseResponseMessage.getBytes());
+                                    writer.close();
+                                    clientSocket.close();
+                                }else{
+                                    writer.write(responseMessage.getBytes());
+                                }
                             }
                         }
 
@@ -250,7 +265,7 @@ public class Main {
                                         while ((line = file_reader.readLine()) != null) {
                                             file_content.append(line);
                                         }
-                                        String responseMessage = "HTTP/1.1 " + STATUS_200_OK + "\r\n" + "Content-Type: " + OCTET_STREAM_CONTENT_TYPE + "\r\nContent-Length: " + file_content.length() + "\r\n\r\n" + file_content.toString();
+                                        String responseMessage = HTTP_1_1 + " " + STATUS_200_OK + "\r\n" + "Content-Type: " + OCTET_STREAM_CONTENT_TYPE + "\r\nContent-Length: " + file_content.length() + "\r\n\r\n" + file_content.toString();
                                         writer.write(responseMessage.getBytes());
                                     } catch (IOException e) {
                                         System.out.println("Error file not found: " + e.getMessage());
@@ -264,8 +279,16 @@ public class Main {
                     }
 
                 } else {
-                    writer.write(("HTTP/1.1 " + STATUS_200_OK).getBytes());
-                    writer.write(("\r\n\r\n").getBytes());
+                    if(isConnectionClose){
+                        writer.write((HTTP_1_1 + " " + STATUS_200_OK + "\r\n" + CONNECTION_CLOSE_STRING).getBytes());
+                        writer.write(("\r\n\r\n").getBytes());
+
+                        writer.close();
+                        clientSocket.close();
+                    }else{
+                        writer.write((HTTP_1_1 + " " + STATUS_200_OK).getBytes());
+                        writer.write(("\r\n\r\n").getBytes());
+                    }
                 }
             } catch (IOException e) {
                 System.err.println("Error handling client: " + e.getMessage());
