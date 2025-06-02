@@ -11,6 +11,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 
+
+//TEST REQUESTS
+//curl --http1.1 -v http://localhost:4221/ --next http://localhost:4221/echo/raspberry -H "Connection: close"
+//curl --http1.1 -v http://localhost:4221/user-agent -H "User-Agent: raspberry/raspberry-pineapple" --next http://localhost:4221/echo/blueberry
+//curl --http1.1 -v http://localhost:4221/user-agent -H "User-Agent: raspberry/raspberry-pineapple" --next http://localhost:4221/echo/blueberry
+//curl --http1.1 -v http://localhost:4221/user-agent -H "User-Agent: mango/orange" --next http://localhost:4221/
+//curl -v http://localhost:4221/echo/raspberry -H "Accept-Encoding: gzip"
+//curl -v http://localhost:4221/echo/raspberry -H "Accept-Encoding: encoding-1, gzip, encoding-2"
+//curl -v http://localhost:4221/echo/raspberry -H "Accept-Encoding: encoding-1, encoding-2"
+//curl -v http://localhost:4221/echo/pineapple -H "Accept-Encoding: gzip"
+//curl -v http://localhost:4221/echo/pineapple -H "Accept-Encoding: invalid-encoding"
+//curl -v -X POST http://localhost:4221/files/grape_mango_pear_mango -H "Content-Length: 55" -H "Content-Type: application/octet-stream" -d 'grape pear raspberry grape mango orange apple blueberry'
+//curl -v http://localhost:4221/files/mango_apple_strawberry_strawberry
+//curl -v http://localhost:4221/files/non-existentblueberry_blueberry_pear_raspberry
+//curl -v http://localhost:4221/user-agent -H "User-Agent: apple/pineapple-banana"
+//curl -v http://localhost:4221/echo/pineapple
+//curl -v http://localhost:4221/orange
+
 public class Main {
 
   private static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
@@ -103,7 +121,6 @@ public class Main {
                 String cntLength = "";
                 String cntType = "";
                 String acceptEncoding = "";
-                String connectionClose = "";
                 boolean isConnectionClose = false;
                 while ((inputLine = reader.readLine()) != null && !inputLine.isEmpty()) {
 //         Getting header
@@ -120,7 +137,6 @@ public class Main {
                         acceptEncoding = inputLine;
                     }
                     if(inputLine.contains(CONNECTION_CLOSE_STRING)){
-                        connectionClose = inputLine;
                         isConnectionClose = true;
                     }
                 }
@@ -151,6 +167,9 @@ public class Main {
                 System.out.println("Content Length: "+cntLength);
                 System.out.println("Content Type: "+cntType);
                 System.out.println(acceptEncoding);
+                if(isConnectionClose){
+                    System.out.println(CONNECTION_CLOSE_STRING);
+                }
                 System.out.println("Request Body: " + reqBody);
                 System.out.println(clientSocket.getKeepAlive());
                 System.out.println("===================================================================");
