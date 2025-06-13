@@ -4,6 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Objects;
@@ -29,6 +30,10 @@ import java.util.zip.GZIPOutputStream;
 //curl -v http://localhost:4221/echo/pineapple
 //curl -v http://localhost:4221/orange
 
+
+//Pool of routes and from them need to server the request, if it is there then server it or send 404 not found response
+
+
 public class Main {
 
   private static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
@@ -36,6 +41,8 @@ public class Main {
   private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
   private static final String STATUS_200_OK = "200 OK";
   private static final String HTTP_1_1 = "HTTP/1.1";
+  private static final String GET_STRING = "GET";
+  private static final String POST_STRING = "POST";
   private static final String STATUS_201_CREATED = "HTTP/1.1 201 Created\r\n\r\n";
   private static final String USER_AGENT = "User-Agent";
   private static final String CONTENT_LENGTH = "Content-Length";
@@ -65,7 +72,6 @@ public class Main {
        System.out.println("IOException: " + e.getMessage());
      }
   }
-
 
 //  To format a response we need content type, content length, and content
   public static String formatResponseString(String content, String status){
@@ -103,12 +109,11 @@ public class Main {
         while (!clientSocket.isClosed()) {
 //      This will run for every thread pool
             try {
-
-                System.out.println("=======================>" + clientSocket.isClosed());
 //      BufferedReader to provide efficient reading of characters, arrays, and lines.
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
 //        TODO: GETTING REQUEST
+//                TODO: ADDING COMPRESSION ALGORITHMS, GZIP, HUFFMAN ENCODING,
                 String request = reader.readLine();
 
                 if(request == null){
@@ -234,6 +239,7 @@ public class Main {
                                 }
                             } else {
                                 if(isConnectionClose){
+                                    System.out.println("I am here");
                                     writer.write(connectionCloseResponseMessage.getBytes());
                                     writer.close();
                                     clientSocket.close();
@@ -256,14 +262,12 @@ public class Main {
                                     File newFile = new File(args[1], fileName);
                                     if (newFile.createNewFile()) {
                                         System.out.println("File created: " + newFile.getName());
-                                        writeFileHandler(newFile, reqBody);
-                                        writer.write(STATUS_201_CREATED.getBytes());
                                     } else {
 //                  TODO: EDGE CASE WHAT IF FILE EXISTS, AND WE HAVE TO OVER WRITE THE FILE
                                         System.out.println("File Already exists");
-                                        writeFileHandler(newFile, reqBody);
-                                        writer.write(STATUS_201_CREATED.getBytes());
                                     }
+                                    writeFileHandler(newFile, reqBody);
+                                    writer.write(STATUS_201_CREATED.getBytes());
                                 } catch (IOException e) {
                                     System.out.println("ERROR: working with post request files" + e.getMessage());
                                 }
